@@ -1614,7 +1614,7 @@ class descriptionType(GeneratedsSuper):
     def set_internal(self, internal): self.internal = internal
     def hasContent_(self):
         if (
-            self.title is not None or
+            #self.title is not None or #jw this call seemed buggy in that title wasn't always defined.
             self.para is not None or
             self.sect1 is not None or
             self.internal is not None

@@ -82,6 +82,8 @@ class CompoundDefTypeSubRenderer(Renderer):
 
         # Take care of innerclasses
         for innerclass in self.data_object.innerclass:
+            if innerclass.prot == 'private':
+                continue
             renderer = self.renderer_factory.create_renderer(self.data_object, innerclass)
             class_nodes = renderer.render()
             if class_nodes: 
@@ -146,8 +148,25 @@ class SectionDefTypeSubRenderer(Renderer):
 
         # Get all the memberdef info
         for memberdef in self.data_object.memberdef:
-            renderer = self.renderer_factory.create_renderer(self.data_object, memberdef)
-            node_list.extend(renderer.render())
+            #renderer = self.renderer_factory.create_renderer(self.data_object, memberdef)
+            #node_list.extend(renderer.render())
+            # jw borrowed to hide private members
+            try:
+                memberdef.prot
+                #import pdb;pdb.set_trace()
+                if memberdef.prot == 'private':
+                    keep = False
+                elif not memberdef.has_docs(): #extended to discard members with no docs
+                    #import pdb;pdb.set_trace()
+                    print "%%%%%%%%% discarding " + memberdef.name
+                    keep = False
+                else:
+                    keep = True
+            except AttributeError:
+                keep = True
+            if keep:
+                renderer = self.renderer_factory.create_renderer(self.data_object, memberdef)
+                node_list.extend(renderer.render())
 
         if node_list:
 
