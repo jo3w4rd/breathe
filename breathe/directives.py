@@ -465,8 +465,12 @@ class DoxygenBaseDirective(BaseDirective):
 
         return node_list
 
+class DoxygenStructDirective(DoxygenClassDirective):
 
-class DoxygenStructDirective(DoxygenBaseDirective):
+    kind = "struct"
+
+
+class oldDoxygenStructDirective(DoxygenBaseDirective):
 
     kind = "struct"
 
