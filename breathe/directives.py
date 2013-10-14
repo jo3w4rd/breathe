@@ -336,6 +336,9 @@ class DoxygenCategoryDirective(DoxygenClassDirective):
 
     kind = "category"
 
+class DoxygenProtocolDirective(DoxygenClassDirective):
+
+    kind = "protocol"
 
 
 class DoxygenFileDirective(BaseDirective):
@@ -765,6 +768,7 @@ class DoxygenDirectiveFactory(object):
             "doxygentypedef": DoxygenTypedefDirective,
             "doxygenfile": DoxygenFileDirective,
             "doxygencategory": DoxygenCategoryDirective,
+            "doxygenprotocol": DoxygenProtocolDirective,
             }
 
     def __init__(
@@ -805,6 +809,9 @@ class DoxygenDirectiveFactory(object):
 
     def create_category_directive_container(self):
         return self.create_directive_container("doxygencategory")
+
+    def create_protocol_directive_container(self):
+        return self.create_directive_container("doxygenprotocol")
 
     def create_file_directive_container(self):
         return self.create_directive_container("doxygenfile")
@@ -1030,6 +1037,11 @@ def setup(app):
     app.add_directive(
             "doxygencategory",
             directive_factory.create_category_directive_container(),
+            )
+
+    app.add_directive(
+            "doxygenprotocol",
+            directive_factory.create_protocol_directive_container(),
             )
 
     app.add_directive(

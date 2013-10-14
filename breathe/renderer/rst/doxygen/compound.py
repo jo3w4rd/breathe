@@ -665,9 +665,8 @@ class ParDocSimpleSectTypeSubRenderer(DocSimpleSectTypeSubRenderer):
 class DocTitleTypeSubRenderer(Renderer):
 
     def render(self):
-
         nodelist = []
-
+        import pdb;
         for item in self.data_object.content_:
             renderer = self.renderer_factory.create_renderer(self.data_object, item)
             nodelist.extend(renderer.render())
