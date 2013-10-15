@@ -566,7 +566,8 @@ class DocImageTypeSubRenderer(Renderer):
                 self.data_object.name
                 )
 
-        options = { "uri" : path_to_image }
+        #options = { "uri" : path_to_image } -- original
+        options = { "uri" : "../../../images/" + self.data_object.name }
 
         return [self.node_factory.image("", **options)]
 
