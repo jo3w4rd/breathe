@@ -189,6 +189,12 @@ class memberdefTypeSub(supermod.memberdefType):
             index = 0
             detaileddescription.content_.insert( index, obj_ )
 
+    def has_docs(self):
+        #import pdb;pdb.set_trace()
+        if (self.briefdescription.has_docs()):
+            return True
+        else:
+            return False
 
 
 supermod.memberdefType.subclass = memberdefTypeSub
@@ -200,6 +206,13 @@ class descriptionTypeSub(supermod.descriptionType):
 
     def __init__(self, title='', para=None, sect1=None, internal=None, mixedclass_=None, content_=None):
         supermod.descriptionType.__init__(self, mixedclass_, content_)
+
+    def has_docs(self):
+        if len(self.content_) > 1:
+            return True
+        else:
+            return False
+
 supermod.descriptionType.subclass = descriptionTypeSub
 # end class descriptionTypeSub
 
@@ -762,6 +775,7 @@ class docParaTypeSub(supermod.docParaType):
         self.simplesects = []
         self.content = []
         self.programlisting =[]
+        self.images =[]
 
     def buildChildren(self, child_, nodeName_):
         supermod.docParaType.buildChildren(self, child_, nodeName_)
@@ -790,6 +804,11 @@ class docParaTypeSub(supermod.docParaType):
             obj_ = supermod.listingType.factory()
             obj_.build(child_)
             self.programlisting.append(obj_)
+        elif child_.nodeType == Node.ELEMENT_NODE and \
+                nodeName_ == 'image':
+            obj_ = supermod.docImageType.factory()
+            obj_.build(child_)
+            self.images.append(obj_)
         elif child_.nodeType == Node.ELEMENT_NODE and (
                 nodeName_ == 'bold' or
                 nodeName_ == 'emphasis' or

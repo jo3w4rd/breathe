@@ -82,6 +82,8 @@ class CompoundDefTypeSubRenderer(Renderer):
 
         # Take care of innerclasses
         for innerclass in self.data_object.innerclass:
+            if innerclass.prot == 'private':
+                continue
             renderer = self.renderer_factory.create_renderer(self.data_object, innerclass)
             class_nodes = renderer.render()
             if class_nodes: 
@@ -146,8 +148,25 @@ class SectionDefTypeSubRenderer(Renderer):
 
         # Get all the memberdef info
         for memberdef in self.data_object.memberdef:
-            renderer = self.renderer_factory.create_renderer(self.data_object, memberdef)
-            node_list.extend(renderer.render())
+            #renderer = self.renderer_factory.create_renderer(self.data_object, memberdef)
+            #node_list.extend(renderer.render())
+            # jw borrowed to hide private members
+            try:
+                memberdef.prot
+                #import pdb;pdb.set_trace()
+                if memberdef.prot == 'private':
+                    keep = False
+                elif not memberdef.has_docs(): #extended to discard members with no docs
+                    #import pdb;pdb.set_trace()
+                    print "%%%%%%%%% discarding " + memberdef.name
+                    keep = False
+                else:
+                    keep = True
+            except AttributeError:
+                keep = True
+            if keep:
+                renderer = self.renderer_factory.create_renderer(self.data_object, memberdef)
+                node_list.extend(renderer.render())
 
         if node_list:
 
@@ -500,6 +519,12 @@ class DocRefTextTypeSubRenderer(Renderer):
 
 
 class DocParaTypeSubRenderer(Renderer):
+    """
+    <para> tags in the Doxygen output tend to contain either text or a single other tag of interest.
+    So whilst it looks like we're combined descriptions and program listings and other things, in
+    the end we generally only deal with one per para tag. Multiple neighbouring instances of these
+    things tend to each be in a separate neighbouring para tag.
+    """
 
     def render(self):
 
@@ -509,6 +534,10 @@ class DocParaTypeSubRenderer(Renderer):
             nodelist.extend(renderer.render())
 
         for item in self.data_object.programlisting:       # Program listings
+            renderer = self.renderer_factory.create_renderer(self.data_object, item)
+            nodelist.extend(renderer.render())
+
+        for item in self.data_object.images:               # Images
             renderer = self.renderer_factory.create_renderer(self.data_object, item)
             nodelist.extend(renderer.render())
 
@@ -527,6 +556,19 @@ class DocParaTypeSubRenderer(Renderer):
 
         return [self.node_factory.paragraph("", "", *nodelist)]
 
+
+class DocImageTypeSubRenderer(Renderer):
+    "Output docutils image node using name attribute from xml as the uri"
+
+    def render(self):
+
+        path_to_image = self.project_info.sphinx_abs_path_to_file(
+                self.data_object.name
+                )
+
+        options = { "uri" : path_to_image }
+
+        return [self.node_factory.image("", **options)]
 
 class DocMarkupTypeSubRenderer(Renderer):
 

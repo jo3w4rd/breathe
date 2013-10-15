@@ -468,8 +468,12 @@ class DoxygenBaseDirective(BaseDirective):
 
         return node_list
 
+class DoxygenStructDirective(DoxygenClassDirective):
 
-class DoxygenStructDirective(DoxygenBaseDirective):
+    kind = "struct"
+
+
+class oldDoxygenStructDirective(DoxygenBaseDirective):
 
     kind = "struct"
 
@@ -641,11 +645,21 @@ class DirectiveContainer(object):
 
 class ProjectInfo(object):
 
-    def __init__(self, name, path, reference, domain_by_extension, domain_by_file_pattern, match):
+    def __init__(
+            self,
+            name,
+            path,
+            reference,
+            source_dir,
+            domain_by_extension,
+            domain_by_file_pattern,
+            match
+            ):
 
         self._name = name
         self._path = path
         self._reference = reference
+        self._source_dir = source_dir
         self._domain_by_extension = domain_by_extension
         self._domain_by_file_pattern = domain_by_file_pattern
         self._match = match
@@ -655,6 +669,30 @@ class ProjectInfo(object):
 
     def path(self):
         return self._path
+
+    def relative_path_to_file(self, file_):
+        """
+        Returns relative path from Sphinx documentation top-level source directory to the specified
+        file assuming that the specified file is a path relative to the doxygen xml output directory.
+        """
+        if os.path.isabs(self._path):
+            full_xml_project_path = self._path
+        else:
+            full_xml_project_path = os.path.realpath(self._path)
+
+        return os.path.relpath(
+                os.path.join(full_xml_project_path, file_),
+                self._source_dir
+                )
+
+    def sphinx_abs_path_to_file(self, file_):
+        """
+        Prepends os.path.sep to the value returned by relative_path_to_file.
+
+        This is to match Sphinx's concept of an absolute path which starts from the top-level source
+        directory of the project.
+        """
+        return os.path.sep + self.relative_path_to_file(file_)
 
     def reference(self):
         return self._reference
@@ -678,8 +716,9 @@ class ProjectInfo(object):
 
 class ProjectInfoFactory(object):
 
-    def __init__(self, match):
+    def __init__(self, source_dir, match):
 
+        self.source_dir = source_dir
         self.match = match
 
         self.projects = {}
@@ -711,7 +750,13 @@ class ProjectInfoFactory(object):
                     "for directive with no 'project' or 'path' specified."
                     )
 
-        return self.projects[self.default_project]
+        try:
+            return self.projects[self.default_project]
+        except KeyError:
+            raise ProjectError(
+                    ( "breathe_default_project value '%s' does not seem to be a valid key for the "
+                      "breathe_projects dictionary" ) % self.default_project
+                    )
 
     def create_project_info(self, options):
 
@@ -745,6 +790,7 @@ class ProjectInfoFactory(object):
                     name,
                     path,
                     reference,
+                    self.source_dir,
                     self.domain_by_extension,
                     self.domain_by_file_pattern,
                     self.match
@@ -812,7 +858,6 @@ class DoxygenDirectiveFactory(object):
 
     def create_protocol_directive_container(self):
         return self.create_directive_container("doxygenprotocol")
-
     def create_file_directive_container(self):
         return self.create_directive_container("doxygenfile")
 
@@ -987,7 +1032,7 @@ def setup(app):
             rst_content_creator
             )
 
-    project_info_factory = ProjectInfoFactory(fnmatch.fnmatch)
+    project_info_factory = ProjectInfoFactory(app.srcdir, fnmatch.fnmatch)
     glob_factory = GlobFactory(fnmatch.fnmatch)
     filter_factory = FilterFactory(glob_factory, path_handler)
     target_handler_factory = TargetHandlerFactory(node_factory)
