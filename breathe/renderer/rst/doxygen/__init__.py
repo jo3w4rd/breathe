@@ -69,7 +69,8 @@ class DoxygenToRstRendererFactory(object):
             domain_handler,
             rst_content_creator,
             filter_,
-            target_handler
+            target_handler,
+            options
             ):
 
         self.node_type = node_type
@@ -85,6 +86,7 @@ class DoxygenToRstRendererFactory(object):
         self.rst_content_creator = rst_content_creator
         self.filter_ = filter_
         self.target_handler = target_handler
+        self.options = options
 
     def create_renderer(
             self,
@@ -235,7 +237,8 @@ class DoxygenToRstRendererFactoryCreator(object):
             default_domain_handler,
             rst_content_creator,
             domain_handler_factory,
-            project_info
+            project_info,
+            options
             ):
 
         self.node_factory = node_factory
@@ -244,6 +247,7 @@ class DoxygenToRstRendererFactoryCreator(object):
         self.rst_content_creator = rst_content_creator
         self.domain_handler_factory = domain_handler_factory
         self.project_info = project_info
+        self.options = options
 
     def create_factory(self, data_object, state, document, filter_, target_handler):
 
@@ -317,7 +321,8 @@ class DoxygenToRstRendererFactoryCreator(object):
                 domain_handler,
                 self.rst_content_creator,
                 filter_,
-                target_handler
+                target_handler,
+                self.options
                 )
 
     def create_child_factory( self, project_info, data_object, parent_renderer_factory ):
@@ -365,7 +370,8 @@ class DoxygenToRstRendererFactoryCreator(object):
                     domain_handler,
                     self.rst_content_creator,
                     parent_renderer_factory.filter_,
-                    parent_renderer_factory.target_handler
+                    parent_renderer_factory.target_handler,
+                    parent_renderer_factory.options
                     )
 
 
@@ -413,5 +419,6 @@ class DoxygenToRstRendererFactoryCreatorConstructor(object):
                 self.rst_content_creator,
                 domain_handler_factory,
                 project_info,
+                options
                 )
 

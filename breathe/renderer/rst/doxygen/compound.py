@@ -231,6 +231,7 @@ class MemberDefTypeSubRenderer(Renderer):
 
 
     def render(self):
+        #import pdb;pdb.set_trace()
 
         refid = "%s%s" % (self.project_info.name(), self.data_object.id)
 
@@ -261,7 +262,7 @@ class FuncMemberDefTypeSubRenderer(MemberDefTypeSubRenderer):
     def title(self):
 
         lines = []
-
+        #import pdb;pdb.set_trace()
         # Handle any template information
         if self.data_object.templateparamlist:
             renderer = self.renderer_factory.create_renderer(
@@ -284,24 +285,64 @@ class FuncMemberDefTypeSubRenderer(MemberDefTypeSubRenderer):
                         )
                     )
 
-        # Get the function type and name
-        args = MemberDefTypeSubRenderer.title(self)
+        options = self.renderer_factory.options
+        if('prog-lang' in options and options['prog-lang'] == 'objc'):
+            if self.data_object.type_:
+                renderer = self.renderer_factory.create_renderer(self.data_object, self.data_object.type_)
+                objc_sig = renderer.render()
 
-        # Get the function arguments
-        args.append(self.node_factory.Text("("))
-        for i, parameter in enumerate(self.data_object.param):
-            if i: args.append(self.node_factory.Text(", "))
-            renderer = self.renderer_factory.create_renderer(self.data_object, parameter)
-            args.extend(renderer.render())
-        args.append(self.node_factory.Text(")"))
+            objc_sig.insert(0, self.node_factory.Text("("))
+            objc_sig.append(self.node_factory.Text(") "))
+            if(len(self.data_object.param) > 0):
+                from string import split
+                name_parts = split(self.data_object.name,':')
+                name = []
+                for i, parameter in enumerate(self.data_object.param):
+                    objc_sig.extend([self.node_factory.strong(text=name_parts[i]),
+                                 self.node_factory.Text(":("),
+                                 self.node_factory.Text(parameter.type_.content_[0].value),
+                                 self.node_factory.Text(") "),
+                                 self.node_factory.Text(parameter.declname),
+                                 self.node_factory.Text(" ")])
 
-        lines.append(
-                self.node_factory.line(
+
+            else:
+                objc_sig.extend([self.node_factory.Text(" "),self.node_factory.strong(text=self.data_object.name)])
+
+            #import pdb;pdb.set_trace()
+            objc_sig.insert(0, self.node_factory.line(""))
+            if(self.data_object.static == u"no"):
+                objc_sig.insert(1, self.node_factory.Text("- "))
+            else:
+                objc_sig.insert(1, self.node_factory.Text("+ "))
+
+            lines.append(
+                 self.node_factory.line(
                     "",
                     self.node_factory.Text(""),
-                    *args
+                    *objc_sig
                     )
-                )
+                 )
+
+        else:
+            # Get the function type and name
+            args = MemberDefTypeSubRenderer.title(self)
+
+            # Get the function arguments
+            args.append(self.node_factory.Text("("))
+            for i, parameter in enumerate(self.data_object.param):
+                if i: args.append(self.node_factory.Text(", "))
+                renderer = self.renderer_factory.create_renderer(self.data_object, parameter)
+                args.extend(renderer.render())
+            args.append(self.node_factory.Text(")"))
+
+            lines.append(
+                    self.node_factory.line(
+                        "",
+                        self.node_factory.Text(""),
+                        *args
+                        )
+                    )
 
         # Setup the line block with gathered information
         block = self.node_factory.line_block(
