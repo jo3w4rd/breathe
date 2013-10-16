@@ -133,6 +133,7 @@ class DoxygenFunctionDirective(BaseDirective):
             "project": unchanged_required,
             "outline": flag,
             "no-link": flag,
+            "prog-lang": unchanged,
             }
     has_content = False
     final_argument_whitespace = True
@@ -280,6 +281,7 @@ class DoxygenClassDirective(BaseDirective):
             "show": unchanged_required,
             "outline": flag,
             "no-link": flag,
+            "prog-lang": unchanged,
             }
     has_content = False
 
