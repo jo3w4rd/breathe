@@ -203,6 +203,33 @@ class MemberDefTypeSubRenderer(Renderer):
 
         # Variable type or function return type
         if self.data_object.type_:
+            options = self.renderer_factory.options
+            if('prog-lang' in options and options['prog-lang'] == 'objc'):
+                #import pdb;pdb.set_trace()
+
+                renderer = self.renderer_factory.create_renderer(self.data_object, self.data_object.type_)
+                objc_sig = renderer.render()
+
+                objc_sig.insert(0, self.node_factory.Text("("))
+                objc_sig.append(self.node_factory.Text(") "))
+                objc_sig.extend([self.node_factory.Text(" "),self.node_factory.strong(text=self.data_object.name)])
+
+                objc_sig.insert(0, self.node_factory.line(""))
+
+                # Instance properties are prefixed with "-", class/static methods with "+"
+                if(self.data_object.static == u"no"):
+                    objc_sig.insert(1, self.node_factory.Text("- "))
+                else:
+                    objc_sig.insert(1, self.node_factory.Text("+ "))
+
+                kind.append(
+                             self.node_factory.line(
+                                                    "",
+                                                    self.node_factory.Text(""),
+                                                    *objc_sig
+                                                    )
+                             )
+        else:
             renderer = self.renderer_factory.create_renderer(self.data_object, self.data_object.type_)
             kind = renderer.render()
 
@@ -231,7 +258,6 @@ class MemberDefTypeSubRenderer(Renderer):
 
 
     def render(self):
-        #import pdb;pdb.set_trace()
 
         refid = "%s%s" % (self.project_info.name(), self.data_object.id)
 
@@ -285,11 +311,11 @@ class FuncMemberDefTypeSubRenderer(MemberDefTypeSubRenderer):
                         )
                     )
 
+        # in Objective-C, we have to insert the parameter types into the method name
         options = self.renderer_factory.options
         if('prog-lang' in options and options['prog-lang'] == 'objc'):
-            if self.data_object.type_:
-                renderer = self.renderer_factory.create_renderer(self.data_object, self.data_object.type_)
-                objc_sig = renderer.render()
+            renderer = self.renderer_factory.create_renderer(self.data_object, self.data_object.type_)
+            objc_sig = renderer.render()
 
             objc_sig.insert(0, self.node_factory.Text("("))
             objc_sig.append(self.node_factory.Text(") "))
@@ -298,19 +324,22 @@ class FuncMemberDefTypeSubRenderer(MemberDefTypeSubRenderer):
                 name_parts = split(self.data_object.name,':')
                 name = []
                 for i, parameter in enumerate(self.data_object.param):
+                    param_type_renderer = self.renderer_factory.create_renderer(self.data_object, parameter.type_)
+                    param_type = param_type_renderer.render()
+
                     objc_sig.extend([self.node_factory.strong(text=name_parts[i]),
-                                 self.node_factory.Text(":("),
-                                 self.node_factory.Text(parameter.type_.content_[0].value),
-                                 self.node_factory.Text(") "),
+                                 self.node_factory.Text(":(")])
+                    objc_sig.extend(param_type)
+                    objc_sig.extend([self.node_factory.Text(") "),
                                  self.node_factory.Text(parameter.declname),
                                  self.node_factory.Text(" ")])
-
 
             else:
                 objc_sig.extend([self.node_factory.Text(" "),self.node_factory.strong(text=self.data_object.name)])
 
-            #import pdb;pdb.set_trace()
             objc_sig.insert(0, self.node_factory.line(""))
+
+            # Instance methods are prefixed with "-", class/static methods with "+"
             if(self.data_object.static == u"no"):
                 objc_sig.insert(1, self.node_factory.Text("- "))
             else:
@@ -323,7 +352,6 @@ class FuncMemberDefTypeSubRenderer(MemberDefTypeSubRenderer):
                     *objc_sig
                     )
                  )
-
         else:
             # Get the function type and name
             args = MemberDefTypeSubRenderer.title(self)
