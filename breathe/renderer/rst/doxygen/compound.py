@@ -158,7 +158,7 @@ class SectionDefTypeSubRenderer(Renderer):
                     keep = False
                 elif not memberdef.has_docs(): #extended to discard members with no docs
                     #import pdb;pdb.set_trace()
-                    print "%%%%%%%%% discarding " + memberdef.name
+                    #print "%%%%%%%%% discarding " + memberdef.name
                     keep = False
                 else:
                     keep = True
